@@ -1,5 +1,5 @@
 # feedback_github
-A simple way of getting user feedback directly as github issues
+A Flutter package which allows the user to give feedback directly in the app and upload it as an issue to Github
 
 <!--
 This README describes the package. If you publish this package to pub.dev,

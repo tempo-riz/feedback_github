@@ -1,5 +1,5 @@
 name: feedback_github
-description: A Flutter package for getting better feedback. It allows the user to give interactive feedback directly in the app and upload it as an issue to Github
+description: A Flutter package which allows the user to give feedback directly in the app and upload it as an issue to Github
 version: 1.0.0
 repository: https://github.com/tempo-riz/feedback_github
 
@@ -14,6 +14,8 @@ dependencies:
   http: ^1.0.0
   http_parser: ^4.0.0
   github: ^9.24.0
+  firebase_storage: ^12.0.1
+  uuid: ^4.4.0
 
 dev_dependencies:
   flutter_test:
