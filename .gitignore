@@ -1,6 +1,6 @@
 # FVM Version Cache
 .fvm/
-
+.env
 # Miscellaneous
 *.class
 *.log
