@@ -1,4 +1,4 @@
-## 1.1.1
+## 1.1.2
 
 `showAndUploadToGitHub` now returns a `Future<Issue>`
 

@@ -31,10 +31,9 @@ extension FeedbackGitHub on FeedbackController {
         final issue = await uploadToGitHub(
           repoUrl: repoUrl,
           gitHubToken: gitHubToken,
-          title:
-              '[FEEDBACK] ${feedback.text.substring(0, min(100, feedback.text.length))}',
           feedbackText: feedback.text,
           screenshot: feedback.screenshot,
+          filename: "file.png",
           labels: labels,
           packageInfo: packageInfo,
           deviceInfo: deviceInfo,
@@ -77,18 +76,23 @@ extension FeedbackGitHub on FeedbackController {
 Future<Issue> uploadToGitHub({
   required String repoUrl,
   required String gitHubToken,
-  required String title,
   required String feedbackText,
+  String? title,
   Uint8List? screenshot,
-  String filename = "screenshot.png",
+  String? filename,
   List<String> labels = const ['feedback'],
   bool packageInfo = true,
   bool deviceInfo = true,
   String? extraData,
   Reference? imageRef,
 }) async {
+  assert(
+      (screenshot == null && filename == null) ||
+          (screenshot != null && filename != null),
+      "Both screenshot and filename should be either provided or neither should be provided");
+
   final String? imageUrl = screenshot != null
-      ? await uploadImageToStorage(screenshot, filename, imageRef)
+      ? await uploadImageToStorage(screenshot, filename!, imageRef)
       : null;
 
   final String image = imageUrl != null
@@ -117,9 +121,12 @@ Future<Issue> uploadToGitHub({
 
   final String body = '$feedbackText \n\n $image $package $device $extra';
 
+  final String issueTitle = title ??
+      '[FEEDBACK] ${feedbackText.substring(0, min(100, feedbackText.length))}';
+
   return createGithubIssue(
       repoUrl: repoUrl,
-      title: title,
+      title: issueTitle,
       body: body,
       gitHubToken: gitHubToken,
       labels: labels);
