@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:feedback/feedback.dart';
@@ -11,7 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 /// extension to call [uploadToGitHub]
 extension FeedbackGitHub on FeedbackController {
   /// Check [uploadToGitHub] for more documentation
-  void showAndUploadToGitHub({
+  Future<Issue> showAndUploadToGitHub({
     required String repoUrl,
     required String gitHubToken,
     List<String> labels = const ['feedback'],
@@ -22,8 +23,10 @@ extension FeedbackGitHub on FeedbackController {
     void Function(Issue)? onSucces,
     void Function(Object error)? onError,
   }) {
+    final Completer<Issue> completer = Completer<Issue>();
+
     show((feedback) async {
-      hide(); // don't block the ui
+      hide(); // don't block the UI
       try {
         final issue = await uploadToGitHub(
           repoUrl: repoUrl,
@@ -39,10 +42,14 @@ extension FeedbackGitHub on FeedbackController {
           imageRef: imageRef,
         );
         onSucces?.call(issue);
+        completer.complete(issue);
       } catch (e) {
         onError?.call(e);
+        completer.completeError(e);
       }
     });
+
+    return completer.future;
   }
 }
 
@@ -72,14 +79,21 @@ Future<Issue> uploadToGitHub({
   required String gitHubToken,
   required String title,
   required String feedbackText,
-  required Uint8List screenshot,
+  Uint8List? screenshot,
+  String filename = "screenshot.png",
   List<String> labels = const ['feedback'],
   bool packageInfo = true,
   bool deviceInfo = true,
   String? extraData,
   Reference? imageRef,
 }) async {
-  final imageUrl = await uploadImageToStorage(screenshot, imageRef);
+  final String? imageUrl = screenshot != null
+      ? await uploadImageToStorage(screenshot, filename, imageRef)
+      : null;
+
+  final String image = imageUrl != null
+      ? '[Download Image]($imageUrl)\n\n'
+      : "no image attached";
 
   final String package = packageInfo
       ? "## Package\n${Platform.operatingSystem}\n${_formatKeys((await PackageInfo.fromPlatform()).data, [
@@ -101,11 +115,7 @@ Future<Issue> uploadToGitHub({
 
   final String extra = extraData != null ? '## Extra\n$extraData' : "";
 
-  final image = imageUrl != null
-      ? '[Download Image]($imageUrl)\n\n'
-      : "no image attached";
-
-  final body = '$feedbackText \n\n $image $package $device $extra';
+  final String body = '$feedbackText \n\n $image $package $device $extra';
 
   return createGithubIssue(
       repoUrl: repoUrl,
@@ -117,11 +127,16 @@ Future<Issue> uploadToGitHub({
 
 /// Upload image to firebase storage and return the download url
 Future<String?> uploadImageToStorage(
-    Uint8List imageData, Reference? imageRef) async {
+  Uint8List imageData,
+  String filename,
+  Reference? imageRef,
+) async {
   try {
-    final filename = '${const Uuid().v4()}.png'; // the plugin returns only pngs
+    // rename the file to avoid conflicts in storage
+    final ext = filename.split(".").last;
+    final file = '${const Uuid().v4()}.$ext';
     final imgRef = imageRef ??
-        FirebaseStorage.instance.ref().child("user-feedback-images/$filename");
+        FirebaseStorage.instance.ref().child("user-feedback-images/$file");
 
     await imgRef.putData(imageData);
 

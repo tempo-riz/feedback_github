@@ -46,7 +46,7 @@ BetterFeedback.of(context).showAndUploadToGitHub(
     // Save it in an environment variable :)
     gitHubToken: dotenv.get("GITHUB_ISSUE_TOKEN"),
     // those are optionals (default values)
-    labels: ['feedback'],
+    labels: ['feedback'], // labels to add to the issue
     packageInfo: true, // show package Info
     deviceInfo: true, // show device Info
     extraData: "Some extra data you want to add in the issue",
@@ -54,9 +54,13 @@ BetterFeedback.of(context).showAndUploadToGitHub(
     onSucces: (issue) => print("succes !"),
     onError: (error) => print("failed :/ $error"),
 )
+// this returns a Future<Issue> so you can await it if you want or use callbacks
 ```
 
-You can also call BetterFeedback.of(context).hide(); to manually dimiss the panel
+Alternatively you can use directly `uploadToGitHub()` if you don't want to use the panel (image is optional)
+
+
+You can also call `BetterFeedback.of(context).hide()` to manually dimiss the panel
 
 
 ## Get a GitHub token
