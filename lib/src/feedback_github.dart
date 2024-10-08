@@ -18,15 +18,22 @@ extension FeedbackGitHub on FeedbackController {
     List<String> labels = const ['feedback'],
     bool packageInfo = true,
     bool deviceInfo = true,
+    bool allowEmptyText = true,
     String? extraData,
     Reference? imageRef,
     void Function(Issue)? onSucces,
     void Function(Object error)? onError,
+    void Function()? onCancel,
   }) {
     final Completer<Issue> completer = Completer<Issue>();
 
     show((feedback) async {
       hide(); // don't block the UI
+      if (!allowEmptyText && feedback.text.isEmpty) {
+        debugPrint("Feedback text is empty, cancelling");
+        onCancel?.call();
+        return;
+      }
       try {
         final issue = await uploadToGitHub(
           repoUrl: repoUrl,
@@ -86,50 +93,28 @@ Future<Issue> uploadToGitHub({
   String? extraData,
   Reference? imageRef,
 }) async {
-  assert(
-      (screenshot == null && filename == null) ||
-          (screenshot != null && filename != null),
+  assert((screenshot == null && filename == null) || (screenshot != null && filename != null),
       "Both screenshot and filename should be either provided or neither should be provided");
 
-  final String? imageUrl = screenshot != null
-      ? await uploadImageToStorage(screenshot, filename!, imageRef)
-      : null;
+  final String? imageUrl = screenshot != null ? await uploadImageToStorage(screenshot, filename!, imageRef) : null;
 
-  final String image = imageUrl != null
-      ? '[Download Image]($imageUrl)\n\n'
-      : "no image attached";
+  final String image = imageUrl != null ? '[Download Image]($imageUrl)\n\n' : "no image attached";
 
   final String package = packageInfo
-      ? "## Package\n${Platform.operatingSystem}\n${_formatKeys((await PackageInfo.fromPlatform()).data, [
-              "version",
-              "buildNumber",
-              "installerStore"
-            ])}\n\n"
+      ? "## Package\n${Platform.operatingSystem}\n${_formatKeys((await PackageInfo.fromPlatform()).data, ["version", "buildNumber", "installerStore"])}\n\n"
       : "";
 
   final String device = deviceInfo
-      ? "## Device\n${_formatKeys((await DeviceInfoPlugin().deviceInfo).data, [
-              "model",
-              "brand",
-              "version",
-              "systemVersion",
-              "isPhysicalDevice"
-            ])}\n\n"
+      ? "## Device\n${_formatKeys((await DeviceInfoPlugin().deviceInfo).data, ["model", "brand", "version", "systemVersion", "isPhysicalDevice"])}\n\n"
       : "";
 
   final String extra = extraData != null ? '## Extra\n$extraData' : "";
 
   final String body = '$feedbackText \n\n $image $package $device $extra';
 
-  final String issueTitle = title ??
-      '[FEEDBACK] ${feedbackText.substring(0, min(100, feedbackText.length))}';
+  final String issueTitle = title ?? '[FEEDBACK] ${feedbackText.substring(0, min(100, feedbackText.length))}';
 
-  return createGithubIssue(
-      repoUrl: repoUrl,
-      title: issueTitle,
-      body: body,
-      gitHubToken: gitHubToken,
-      labels: labels);
+  return createGithubIssue(repoUrl: repoUrl, title: issueTitle, body: body, gitHubToken: gitHubToken, labels: labels);
 }
 
 /// Upload image to firebase storage and return the download url
@@ -142,8 +127,7 @@ Future<String?> uploadImageToStorage(
     // rename the file to avoid conflicts in storage
     final ext = filename.split(".").last;
     final file = '${const Uuid().v4()}.$ext';
-    final imgRef = imageRef ??
-        FirebaseStorage.instance.ref().child("user-feedback-images/$file");
+    final imgRef = imageRef ?? FirebaseStorage.instance.ref().child("user-feedback-images/$file");
 
     await imgRef.putData(imageData);
 
@@ -166,9 +150,7 @@ Future<Issue> createGithubIssue({
   // https://github.com/tempo-riz/feedback_github or https://github.com/tempo-riz/feedback_github.git -> temporiz / feedback_github
   final split = repoUrl.split("/");
   final owner = split[split.length - 2];
-  final name = split[split.length - 1]
-      .split(".")
-      .first; //remove .git in case there is any
+  final name = split[split.length - 1].split(".").first; //remove .git in case there is any
 
   RepositorySlug slug = RepositorySlug(owner, name);
 
@@ -181,10 +163,5 @@ Future<Issue> createGithubIssue({
 }
 
 String _formatKeys(Map<String, dynamic> map, List<String> keys) {
-  return keys
-      .map((key) => map.containsKey(key) && map[key] != null
-          ? "$key: ${map[key].toString()}"
-          : null)
-      .where((value) => value != null)
-      .join("\n");
+  return keys.map((key) => map.containsKey(key) && map[key] != null ? "$key: ${map[key].toString()}" : null).where((value) => value != null).join("\n");
 }
