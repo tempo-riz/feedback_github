@@ -21,8 +21,7 @@ extension FeedbackGitHub on FeedbackController {
     bool allowEmptyText = true,
     String? extraData,
     Reference? imageRef,
-  bool allowProdEmulatorFeedback = false,
-
+    bool allowProdEmulatorFeedback = true,
     void Function(Issue)? onSucces,
     void Function(Object error)? onError,
     void Function()? onCancel,
@@ -97,7 +96,7 @@ Future<Issue> uploadToGitHub({
   bool deviceInfo = true,
   String? extraData,
   Reference? imageRef,
-  bool allowProdEmulatorFeedback = false,
+  bool allowProdEmulatorFeedback = true,
 }) async {
   assert(
       (screenshot == null && filename == null) ||
