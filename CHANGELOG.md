@@ -1,3 +1,5 @@
+## 1.2.1
+- update deps
 ## 1.2.0
 - added missing mime type images 
 - inline display of images in GitHub issues instead of a link
