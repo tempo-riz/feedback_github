@@ -5,6 +5,7 @@ import 'package:feedback/feedback.dart';
 import 'package:flutter/foundation.dart';
 import 'package:github/github.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -84,6 +85,8 @@ extension FeedbackGitHub on FeedbackController {
 /// [imageRef] optional reference if you want to store the image somewhere else than default /user-feedback-images/filename
 ///
 /// [allowProdEmulatorFeedback] if true, feedback from emulator in production will be allowed (could be google play bots)
+///
+/// [imageDisplayWidth] is the width of the image displayed in the issue. Default is `300`.
 Future<Issue> uploadToGitHub({
   required String repoUrl,
   required String gitHubToken,
@@ -97,6 +100,7 @@ Future<Issue> uploadToGitHub({
   String? extraData,
   Reference? imageRef,
   bool allowProdEmulatorFeedback = true,
+  int imageDisplayWidth = 300,
 }) async {
   assert(
       (screenshot == null && filename == null) ||
@@ -108,7 +112,7 @@ Future<Issue> uploadToGitHub({
       : null;
 
   final String image = imageUrl != null
-      ? '[Download Image]($imageUrl)\n\n'
+      ? '<img src="$imageUrl" width="$imageDisplayWidth" />\n\n'
       : "no image attached";
 
   final String package = packageInfo
@@ -165,11 +169,15 @@ Future<String?> uploadImageToStorage(
   try {
     // rename the file to avoid conflicts in storage
     final ext = filename.split(".").last;
-    final file = '${const Uuid().v4()}.$ext';
-    final imgRef = imageRef ??
-        FirebaseStorage.instance.ref().child("user-feedback-images/$file");
+    final newFilename = '${const Uuid().v4()}.$ext';
 
-    await imgRef.putData(imageData);
+    final imgRef = imageRef ??
+        FirebaseStorage.instance
+            .ref()
+            .child("user-feedback-images/$newFilename");
+
+    await imgRef.putData(
+        imageData, SettableMetadata(contentType: lookupMimeType(filename)));
 
     return await imgRef.getDownloadURL();
   } catch (e) {
