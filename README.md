@@ -1,5 +1,6 @@
 # feedback_github
-
+[![Pub Version](https://img.shields.io/pub/v/feedback_github)](https://pub.dev/packages/feedback_github)
+ 
 A Flutter package that enables users to submit feedback as GitHub issues, storing images in Firebase Storage.
 
 ## Features
