@@ -34,5 +34,5 @@ flutter:
   uses-material-design: true
 
 false_secrets:
-  - "/example/demo/android/app/google-services.json"
-  - "/example/demo/lib/firebase_options.dart"
+  - /example/android/app/google-services.json
+  - /example/lib/firebase_options.dart
