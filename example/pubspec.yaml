@@ -11,9 +11,8 @@ dependencies:
     sdk: flutter
 
   feedback_github:
-    path: ../../
+    path: ../
   flutter_dotenv: ^5.1.0
-  firebase_core: ^3.1.1
 
 dev_dependencies:
   flutter_test:
