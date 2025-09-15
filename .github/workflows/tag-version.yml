@@ -83,4 +83,4 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git tag v${{ steps.get_version.outputs.version }}
-          git push origin v${{ steps.get_version.outputs.version }}
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} v${{ steps.get_version.outputs.version }}
