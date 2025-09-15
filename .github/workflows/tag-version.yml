@@ -19,6 +19,10 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      # format
+      - name: Format code
+        run: dart format .
+
       # Get current version from pubspec.yaml
       - name: Get version from pubspec.yaml
         id: get_version
