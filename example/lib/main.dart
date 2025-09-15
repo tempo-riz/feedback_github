@@ -2,6 +2,7 @@ import 'package:example/firebase_options.dart';
 import 'package:feedback_github/feedback_github.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   await dotenv.load();
