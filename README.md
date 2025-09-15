@@ -71,15 +71,11 @@ You can also call `BetterFeedback.of(context).hide()` to manually dimiss the pan
 
 
 ## Get a GitHub token
-- login to github
-- click on your avatar topright
-- settings (cogwheel)
-- Developer settings (bottom of list)
-- Personal acces tokens -> Fine-grained tokens (more secure than classic)
+- go [Here](https://github.com/settings/personal-access-tokens)
 - generate new token with : 
-    1. name it and add an optional expiration time (max date is 1 year from today)
+    1. name it and add an optional expiration time
     2. Repository access : Only select repositories, select your repo
-    3. Give repository permission : Read and Write for Issues
+    3. Add permissions : Issues (read and write)
     4. Generate your token and save it securely (don't commit it in a repo)
 
 ## 🎨 Configuration & customization

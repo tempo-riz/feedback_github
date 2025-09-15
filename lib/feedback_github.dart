@@ -107,23 +107,43 @@ Future<Issue> uploadToGitHub({
   bool allowProdEmulatorFeedback = true,
   int imageDisplayWidth = 300,
 }) async {
-  assert((screenshot == null && filename == null) || (screenshot != null && filename != null),
+  assert(
+      (screenshot == null && filename == null) ||
+          (screenshot != null && filename != null),
       "Both screenshot and filename should be either provided or neither should be provided");
 
-  final String? imageUrl = screenshot != null ? await uploadImageToStorage(screenshot, filename!, imageRef) : null;
+  final String? imageUrl = screenshot != null
+      ? await uploadImageToStorage(screenshot, filename!, imageRef)
+      : null;
 
-  final String image = imageUrl != null ? '<img src="$imageUrl" width="$imageDisplayWidth" />\n\n' : "no image attached";
+  final String image = imageUrl != null
+      ? '<img src="$imageUrl" width="$imageDisplayWidth" />\n\n'
+      : "no image attached";
 
   final String package = packageInfo
-      ? "## Package\n${Platform.operatingSystem}\n${_formatKeys((await PackageInfo.fromPlatform()).data, ["version", "buildNumber", "installerStore"])}\n\n"
+      ? "## Package\n${Platform.operatingSystem}\n${_formatKeys((await PackageInfo.fromPlatform()).data, [
+              "version",
+              "buildNumber",
+              "installerStore"
+            ])}\n\n"
       : "";
 
   final deviceData = (await DeviceInfoPlugin().deviceInfo).data;
 
-  final String device = deviceInfo ? "## Device\n${_formatKeys(deviceData, ["model", "brand", "version", "systemVersion", "isPhysicalDevice"])}\n\n" : "";
+  final String device = deviceInfo
+      ? "## Device\n${_formatKeys(deviceData, [
+              "model",
+              "brand",
+              "version",
+              "systemVersion",
+              "isPhysicalDevice"
+            ])}\n\n"
+      : "";
 
   // cancel if emulator in production (only ios and android)
-  if (!allowProdEmulatorFeedback && kReleaseMode && (Platform.isAndroid || Platform.isIOS)) {
+  if (!allowProdEmulatorFeedback &&
+      kReleaseMode &&
+      (Platform.isAndroid || Platform.isIOS)) {
     final bool isPhysicalDevice = (deviceData["isPhysicalDevice"] ?? false);
     if (!isPhysicalDevice) {
       throw Exception("Emulator feedback not allowed in production");
@@ -134,9 +154,15 @@ Future<Issue> uploadToGitHub({
 
   final String body = '$feedbackText \n\n $image $package $device $extra';
 
-  final String issueTitle = title ?? '[FEEDBACK] ${feedbackText.substring(0, min(100, feedbackText.length))}';
+  final String issueTitle = title ??
+      '[FEEDBACK] ${feedbackText.substring(0, min(100, feedbackText.length))}';
 
-  return createGithubIssue(repoUrl: repoUrl, title: issueTitle, body: body, gitHubToken: gitHubToken, labels: labels);
+  return createGithubIssue(
+      repoUrl: repoUrl,
+      title: issueTitle,
+      body: body,
+      gitHubToken: gitHubToken,
+      labels: labels);
 }
 
 /// Upload image to firebase storage and return the download url
@@ -150,9 +176,13 @@ Future<String?> uploadImageToStorage(
     final ext = filename.split(".").last;
     final newFilename = '${const Uuid().v4()}.$ext';
 
-    final imgRef = imageRef ?? FirebaseStorage.instance.ref().child("user-feedback-images/$newFilename");
+    final imgRef = imageRef ??
+        FirebaseStorage.instance
+            .ref()
+            .child("user-feedback-images/$newFilename");
 
-    await imgRef.putData(imageData, SettableMetadata(contentType: lookupMimeType(filename)));
+    await imgRef.putData(
+        imageData, SettableMetadata(contentType: lookupMimeType(filename)));
 
     return await imgRef.getDownloadURL();
   } catch (e) {
@@ -173,7 +203,9 @@ Future<Issue> createGithubIssue({
   // https://github.com/tempo-riz/feedback_github or https://github.com/tempo-riz/feedback_github.git -> temporiz / feedback_github
   final split = repoUrl.split("/");
   final owner = split[split.length - 2];
-  final name = split[split.length - 1].split(".").first; //remove .git in case there is any
+  final name = split[split.length - 1]
+      .split(".")
+      .first; //remove .git in case there is any
 
   RepositorySlug slug = RepositorySlug(owner, name);
 
@@ -186,5 +218,10 @@ Future<Issue> createGithubIssue({
 }
 
 String _formatKeys(Map<String, dynamic> map, List<String> keys) {
-  return keys.map((key) => map.containsKey(key) && map[key] != null ? "$key: ${map[key].toString()}" : null).where((value) => value != null).join("\n");
+  return keys
+      .map((key) => map.containsKey(key) && map[key] != null
+          ? "$key: ${map[key].toString()}"
+          : null)
+      .where((value) => value != null)
+      .join("\n");
 }

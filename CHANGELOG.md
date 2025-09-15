@@ -1,3 +1,7 @@
+## 1.2.3
+- remove firebase exports as it can create version conflicts
+- update docs
+
 ## 1.2.2
 - update deps
 - export firebase_core and firebase_storage for handyness
