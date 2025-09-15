@@ -1,4 +1,4 @@
-name: Check & Publish Flutter Package
+name: Publish to pub.dev
 
 on:
   push:
@@ -6,59 +6,9 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: stable
-
-      - name: Extract version from pubspec
-        id: version
-        run: |
-          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}')
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          echo "pubspec_version=$PUBSPEC_VERSION" >> $GITHUB_OUTPUT
-          echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Check version
-        run: |
-          if [ "${{ steps.version.outputs.pubspec_version }}" = "${{ steps.version.outputs.tag_version }}" ]; then
-            echo "✅ Version matches tag, continuing."
-          else
-            echo "❌ Version mismatch: pubspec.yaml has ${{ steps.version.outputs.pubspec_version }}, tag is ${{ steps.version.outputs.tag_version }}"
-            exit 1
-          fi
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Dry run publish
-        run: flutter pub publish --dry-run
-
-      - name: Install pana
-        run: flutter pub global activate pana
-
-      - name: Run pana
-        run: flutter pub global run pana . --json > pana_report.json
-
-      - name: Verify pana score
-        run: |
-          SCORE=$(jq '.scores.grantedPoints' pana_report.json)
-          MAX=$(jq '.scores.maxPoints' pana_report.json)
-          echo "Pana score: $SCORE/$MAX"
-          if [ "$SCORE" -ne "$MAX" ]; then
-            echo "❌ Pana score is not perfect ($SCORE/$MAX)."
-            exit 1
-          fi
-
   publish:
-    needs: check
     permissions:
-      id-token: write
+      id-token: write # Required for OIDC authentication
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
-      working-directory: .
+      working-directory: . # Path to your Flutter package (if single package, use ".")

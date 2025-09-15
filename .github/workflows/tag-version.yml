@@ -8,10 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
+
+      # Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
 
       # Fetch dependencies
-      - run: dart pub get
+      - name: Get dependencies
+        run: flutter pub get
 
       # Get current version from pubspec.yaml
       - name: Get version from pubspec.yaml
@@ -36,21 +42,21 @@ jobs:
       # Dry-run publish (exit workflow successfully if fails)
       - name: Dry-run publish
         run: |
-          if ! dart pub publish --dry-run; then
+          if ! flutter pub publish --dry-run; then
             echo "⚠️ Dry-run failed, exiting workflow successfully."
             exit 0
           fi
 
       # Install pana for scoring
       - name: Install pana
-        run: dart pub global activate pana
+        run: flutter pub global activate pana
 
       # Analyze package with pana
       - name: Analyze package with pana
         id: pana
         run: |
           export PATH="$PATH":"$HOME/.pub-cache/bin"
-          pana --json . > result.json
+          flutter pub global run pana . --json > result.json
           granted=$(jq '.scores.grantedPoints' result.json)
           derived=$(jq '.scores.derivedPoints' result.json)
           total=$((granted + derived))
